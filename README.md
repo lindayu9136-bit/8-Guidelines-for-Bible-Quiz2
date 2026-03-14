@@ -1,11 +1,1324 @@
-<div align="center">
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>성경 암송 퀴즈 5확신</title>
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Serif+KR:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest"></script>
 
-  <h1>Built with AI Studio</h2>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            themeBg: "#a595c8",
+            titleFont: "#111111",
+            mainFont: "#3d2b29",
+            subFont: "#35293b",
+            cream: "#f2efea",
+            pointFont: "#2d3d2c",
+            brickRed: "#a34c44",
+          },
+          fontFamily: {
+            serif: ['"Gowun Batang"', "serif"],
+            classic: ['"Noto Serif KR"', "serif"],
+            sans: ["Pretendard", "ui-sans-serif", "system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+          },
+          animation: {
+            "fade-in": "fadeIn 0.6s ease-out forwards",
+            "slide-up": "slideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+          },
+          keyframes: {
+            fadeIn: { "0%": { opacity: "0" }, "100%": { opacity: "1" } },
+            slideUp: { "0%": { opacity: "0", transform: "translateY(55px)" }, "100%": { opacity: "1", transform: "translateY(0)" } },
+          },
+        },
+      },
+    };
+  </script>
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+  <style>
+    :root{
+      --themeBg:#a595c8;
+      --mainFont:#3d2b29;
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+      /* (v1) 엔딩 연출 제거했지만, 변수는 남겨도 동작/레이아웃 영향 없음 */
+      --endingSproutX: 0px;
+      --endingSproutY: 15px;
+      --endingGlowX: 0px;
+      --endingGlowY: 15px;
+      --endingRadialX: 0px;
+      --endingRadialY: -20px;
+      --endingStripX: 0px;
+      --endingStripY: 100px;
+    }
 
+    body{
+      background-color:var(--themeBg);
+      color:var(--mainFont);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      font-synthesis: none;
+      overscroll-behavior-y:none;
+      user-select:none;
+      overflow-x:hidden;
+    }
+    ::-webkit-scrollbar{ display:none; }
+
+    h1,h2,h3{ font-family:"Noto Serif KR", serif; }
+    .bible-text{ font-family:"Gowun Batang", serif; }
+    .break-keep{ word-break: keep-all; }
+
+    .glass-card{
+      background: rgba(255, 255, 255, 0.19);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 0.5px solid rgba(255, 255, 255, 0.34);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.40),
+        inset 0 1px 0 rgba(255,255,255,0.28),
+        0 26px 40px -26px rgba(40,30,45,0.34),
+        0 12px 22px -20px rgba(40,30,45,0.22),
+        0 4px 8px -6px rgba(40,30,45,0.12);
+    }
+
+    .list-item-shadow{ box-shadow: 0 2px 12px -4px rgba(40, 30, 45, 0.06); }
+
+    .study-card-shadow{
+      box-shadow:
+        0 20px 36px -22px rgba(40,30,45,0.28),
+        0 12px 24px -20px rgba(40,30,45,0.22),
+        inset 0 1px 0 rgba(255,255,255,0.34);
+    }
+
+    /* ✅ Study: 본문+인용 블록을 "기존보다 5px 아래로" */
+    .study-text-pack{ transform: translateY(5px); }
+
+    .btn-primary{
+      background: linear-gradient(135deg, rgba(122, 103, 95, 0.34) 0%, rgba(122, 103, 95, 0.22) 100%);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.34);
+      box-shadow: 0 8px 16px -14px rgba(40, 30, 45, 0.18), 0 6px 12px -12px rgba(122, 103, 95, 0.18), inset 0 1px 0 rgba(255,255,255,0.26);
+      color: rgba(61, 43, 41, 0.92);
+    }
+
+    .is-pressing{
+      transform: translateY(1px) scale(0.985) !important;
+      filter: brightness(0.96) !important;
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.05) !important;
+    }
+    .clickable-element{
+      transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), filter 0.15s ease, box-shadow 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .screen{ display:none; }
+    .screen.active{ display:flex; flex-direction:column; }
+    /* ✅ (수정) 홈 화면(인트로) 스크롤/여백 최적화
+       - 콘텐츠 높이가 화면보다 짧을 때 버튼 아래에 '남는 공간'이 크게 보이는 문제 해결
+       - 인트로만 column + space-between으로 배치해서 버튼을 자연스럽게 하단으로 붙임 */
+    #screen-intro.active{
+      flex-direction: column;
+      justify-content: space-between;
+      /* iOS safe-area 고려 */
+      padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+    }
+
+
+    .title-vivid{
+      text-shadow: 0 0.8px 1.5px rgba(0,0,0,0.12);
+      filter: contrast(1.11);
+    }
+
+    #garden-wrap{ width:100%; }
+    .garden{ width: min(420px, 96vw); height:auto; display:block; }
+    .garden{ --stemGreen: rgba(46, 98, 74, .86); --baseLeafGreen: rgba(46, 98, 74, .82); }
+    .garden .soil{ fill:none; stroke: rgba(60, 42, 36, .10); stroke-width: 4.6; stroke-linecap: round; }
+    .garden .stem{ stroke: var(--stemGreen); stroke-width: 2.9; fill:none; stroke-linecap: round; }
+    .garden .leaf{ fill: var(--leaf-color); }
+    .garden .petal{ fill: var(--petal-color); }
+    .garden .center{ fill: rgba(248, 246, 242, .92); }
+    .garden .flowerleaf{ fill: var(--baseLeafGreen); }
+    .garden .plant{
+      opacity: 0;
+      transform: translate(var(--x), var(--y)) translateY(28px) scale(0);
+      transform-origin: 0px 150px;
+      will-change: transform, opacity;
+    }
+    /* ✅ 홈 가든 애니메이션 (항상 동일하게 재생) */
+    #garden-wrap.play .garden .plant{ animation: plantRiseSmooth 3.6s cubic-bezier(0.22, 0.90, 0.18, 1.00) 0.37s forwards; }
+    @keyframes plantRiseSmooth{
+      from{ opacity: 0; transform: translate(var(--x), var(--y)) translateY(28px) scale(0); }
+      to{ opacity: 1; transform: translate(var(--x), var(--y)) translateY(0px) scale(1); }
+    }
+
+    .quiz-progress-dots{ display:flex; justify-content:center; align-items:center; gap: 7px; }
+    .quiz-dot{ width: 7px; height: 7px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.28); background: rgba(255,255,255,0.00);
+      transition: background 160ms ease, border-color 160ms ease, transform 160ms ease; }
+    .quiz-dot.is-filled{ background: rgba(61,43,41,0.48); border-color: rgba(61,43,41,0.42); transform: scale(1.05); }/* ✅ 퀴즈 행간 랜덤 깨짐 방지 */
+    .quiz-line{
+      display: block;
+      line-height: 1.86;
+      padding: 0.12em 0;
+      letter-spacing: -0.01em;
+      word-break: keep-all;
+      overflow-wrap: normal;
+    }
+    .quiz-quote{
+      line-height: 1.86;
+      letter-spacing: -0.01em;
+      word-break: keep-all;
+      overflow-wrap: normal;
+    }
+
+    .quiz-blank{
+      display: inline-block;
+      text-align: center;
+      height: 1.10em;
+      line-height: 1.10em;
+      min-width: 2.45em;
+      padding: 0 0.60em;
+      margin: 0 0.06em;
+      border-radius: 999px;
+      background: rgba(190, 188, 214, 0.88);
+      border: none;
+      box-shadow: inset 0 1px 2px rgba(61,43,41,0.11), inset 0 -1px 0 rgba(255,255,255,0.16);
+      color: rgba(61, 43, 41, 0.92);
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      vertical-align: baseline;
+      white-space: nowrap;
+    }
+    .quiz-blank.is-active{
+      animation: activeRingFade 180ms ease-out both;
+      box-shadow: inset 0 1px 2px rgba(61,43,41,0.11), inset 0 -1px 0 rgba(255,255,255,0.16), 0 0 0 1px rgba(61,43,41,0.18);
+    }
+    @keyframes activeRingFade{
+      from{ box-shadow: inset 0 1px 2px rgba(61,43,41,0.11), inset 0 -1px 0 rgba(255,255,255,0.16), 0 0 0 1px rgba(61,43,41,0.00); }
+      to{ box-shadow: inset 0 1px 2px rgba(61,43,41,0.11), inset 0 -1px 0 rgba(255,255,255,0.16), 0 0 0 1px rgba(61,43,41,0.18); }
+    }
+    .quiz-blank.is-filled{
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+      min-width: 0;
+      height: auto;
+      line-height: inherit;
+      border-radius: 0;
+    }
+
+    .choice-btn{
+      width: 100%;
+      text-align: center;
+      padding: 16px 14px;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.16);
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow: 0 10px 22px -18px rgba(40, 30, 45, 0.22);
+      color: rgba(61, 43, 41, 0.92);
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+    }
+    .choice-label{
+      font-family:"Noto Serif KR", serif;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      font-size: 18px;
+      line-height: 1.2;
+      position: relative;
+      z-index: 2;
+    }
+    .choice-btn.is-dimmed{ opacity: 0.38; filter: grayscale(0.35); }
+    .choice-btn.is-correct{
+      animation: correctSettle 120ms ease-out both;
+      box-shadow: inset 0 2px 8px rgba(61,43,41,0.16), inset 0 -1px 0 rgba(255,255,255,0.26), 0 10px 22px -18px rgba(40, 30, 45, 0.22);
+    }
+    @keyframes correctSettle{ from{ transform: scale(1); filter: brightness(1); } to{ transform: scale(0.992); filter: brightness(1.02); } }
+    .choice-btn.is-correct::after{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background: radial-gradient(120px 60px at 50% 40%, rgba(255,255,255,0.22), rgba(255,255,255,0.00) 65%);
+      opacity: 0;
+      animation: softGlow 120ms ease-out forwards;
+      z-index:1;
+      pointer-events:none;
+    }
+    @keyframes softGlow{ from{ opacity: 0; } to{ opacity: 1; } }
+
+    #quiz-choice-area{
+      transform-origin: top;
+      transition: max-height 180ms ease, opacity 180ms ease, transform 180ms ease;
+      max-height: 240px;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    #quiz-choice-area.is-collapsed{
+      max-height: 0px;
+      opacity: 0;
+      transform: translateY(-6px);
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    /* =========================
+       ✅ ENDING (v1: 연출 제거판)
+       - 배경/세이프에어/정렬/홈버튼만 유지
+       - ending-enter 등장 연출 삭제
+       ========================= */
+    #screen-ending{ display:none !important; }
+    #screen-ending.active{
+      display:flex !important;
+      flex-direction:column;
+      min-height: 100svh;
+      height: 100svh;
+      font-family: "Pretendard", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    }
+
+    .ending-wrap{
+      position: relative;
+      width: 100%;
+      flex: 1 1 auto;
+      min-height: 100%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      text-align:center;
+      overflow:hidden;
+    }
+
+    .ending-top-spacer{ height: calc(env(safe-area-inset-top) + 18px); width: 100%; flex: 0 0 auto; }
+
+    .ending-push{ flex: 1 1 auto; width:100%; min-height: 8px; }
+
+    .ending-cta{
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 0 16px;
+      padding-bottom: calc(env(safe-area-inset-bottom) + 48px);
+      z-index: 40;
+    }
+    
+    /* ✅ (수정-마스크) 엔딩카드 섀도우가 버튼 영역 위로 겹쳐 보이는 현상 방지
+       - '카드'의 블러 섀도우는 영역이 커서 아래(CTA)까지 번짐
+       - 버튼 위에 마스크 레이어(배경색 그라데이션)를 깔아 섀도우만 자연스럽게 잘라냄
+       - 버튼 자체는 z-index로 항상 위에 유지 */
+    .ending-cta::before{
+      content:"";
+      position:absolute;
+      left:0; right:0;
+      /* CTA 상단으로 살짝 올라가서 섀도우만 가림 */
+      top:-78px;
+      height: 110px;
+      background: linear-gradient(to bottom,
+        rgba(165,149,200,0) 0%,
+        rgba(165,149,200,0.88) 46%,
+        rgba(165,149,200,1) 72%,
+        rgba(165,149,200,1) 100%);
+      pointer-events:none;
+      z-index: 0;
+    }
+    .ending-cta > *{ position: relative; z-index: 1; }
+/* 카드 하단 그림자가 CTA(홈으로) 영역과 겹쳐 보일 때를 위해,
+       배경색 그라데이션으로 자연스럽게 마스킹(떠 보이는 느낌은 유지) */
+    .ending-cta::before{
+      content:"";
+      position:absolute;
+      left:0; right:0; top:-34px; bottom:0;
+      background: linear-gradient(to bottom, rgba(165,149,200,0) 0%, rgba(165,149,200,1) 72%);
+      pointer-events:none;
+      z-index:0;
+    }
+    .ending-cta > *{
+      position: relative;
+      z-index: 1;
+    }
+
+
+    /* ✅ (수정3) 버튼이 배경에서 살짝 떠 보이게: 두 버튼에만 적용할 추가 쉐도우 */
+    .cta-float-shadow{
+      box-shadow:
+        0 20px 36px -28px rgba(40,30,45,0.34),
+        0 12px 22px -22px rgba(40,30,45,0.22),
+        0 6px 12px -14px rgba(40,30,45,0.12);
+    }
+
+    .ending-home-btn{
+      width: auto;
+      margin: 0 auto;
+    }
+    .ending-home-btn span{
+      font-family: inherit;
+      font-weight: inherit;
+      font-size: inherit;
+      letter-spacing: inherit;
+    }
+  
+
+    /* ===== (v2) 엔딩카드 고정 스타일: 카드 구조/수치/라인/광택/3D 그대로 ===== */
+    /* [1. 3D & Motion Engine - Symmetric Structure] */
+        @keyframes cardFlip3D {
+            0% { transform: rotateY(0deg); }
+            20% { transform: rotateY(-1.5deg); }
+            44% { transform: rotateY(181.5deg); }
+            50% { transform: rotateY(180deg); }
+            70% { transform: rotateY(180deg); }
+            76% { transform: rotateY(178.5deg); }
+            94% { transform: rotateY(361.5deg); }
+            100% { transform: rotateY(360deg); }
+        }
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-25px); }
+        }
+        @keyframes shadowPulse {
+            0%, 100% { transform: scale(1); opacity: 0.06; filter: blur(12px); }
+            50% { transform: scale(1.15); opacity: 0.03; filter: blur(18px); }
+        }
+        /* [Sync with cardFlip3D] */
+        @keyframes glint-refined {
+            0% { transform: translateX(-180%) skewX(-20deg); opacity: 0; }
+            10% { transform: translateX(0%) skewX(-20deg); opacity: 0.18; }
+            20% { transform: translateX(180%) skewX(-20deg); opacity: 0; }
+            50% { transform: translateX(-180%) skewX(-20deg); opacity: 0; }
+            60% { transform: translateX(0%) skewX(-20deg); opacity: 0.18; }
+            70% { transform: translateX(180%) skewX(-20deg); opacity: 0; }
+            100% { transform: translateX(180%) skewX(-20deg); opacity: 0; }
+        }
+
+        /* [2. Utility Classes] */
+        .animate-card-flip { animation: cardFlip3D 8s cubic-bezier(0.7, 0, 0.3, 1) infinite; transform-style: preserve-3d; }
+        .animate-float { animation: floating 4.5s ease-in-out infinite; }
+        .animate-shadow { animation: shadowPulse 4.5s ease-in-out infinite; }
+        .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        .glass-pure {
+            background: linear-gradient(145deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.04) 100%);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.05), inset 0 0 40px rgba(255, 255, 255, 0.04);
+        }
+        
+        .glint-effect {
+            position: absolute; top: 0; left: -150%; width: 350%; height: 100%;
+            background: linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0) 60%, transparent 100%);
+            animation: glint-refined 8s ease-in-out infinite; pointer-events: none;
+        }
+
+        .subtle-dots {
+            background-image: radial-gradient(circle, rgba(0,0,0,0.05) 0.8px, transparent 0.8px);
+            background-size: 40px 40px;
+        }
+
+    .font-gothic {
+            font-family: Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+        }
+
+        .font-705 { font-weight: 700; text-shadow: 0 0 0.2px currentColor; }
+  
+    /* v3.3.8 - topic list one-line titles + affordance (no arrow icons) */
+    .topic-title-one-line{
+      font-size: clamp(20px, 4.0vw, 24px);
+      letter-spacing: -0.005em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .topic-card{ cursor: pointer; transition: transform 120ms ease; }
+    .topic-card:active{ transform: scale(0.985); }
+    .topic-card.is-pressed{ transform: scale(0.985); }
+
+    /* Highlight border affordance for clickable topic cards (subtle) */
+    .topic-card{
+      position: relative;
+      transition: border-color 140ms ease;
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+    .topic-card:hover,
+    .topic-card:focus-visible{
+      border-color: rgba(255,255,255,0.28);
+    }
+    .topic-card:active,
+    .topic-card.is-pressed{
+      border-color: rgba(255,255,255,0.34);
+    }
+    .topic-card:hover,
+    .topic-card:focus-visible{
+      border-color: rgba(255,255,255,0.45);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+    }
+    .topic-card:active,
+    .topic-card.is-pressed{
+      border-color: rgba(255,255,255,0.65);
+    }
+
+    /* v3.6.1 override: softer highlight border and no hover/active shadow */
+    .topic-card{
+      border: 1px solid rgba(255,255,255,0.10) !important;
+      box-shadow: none !important;
+    }
+    .topic-card:hover,
+    .topic-card:focus-visible{
+      border-color: rgba(255,255,255,0.18) !important;
+      box-shadow: none !important;
+    }
+    .topic-card:active,
+    .topic-card.is-pressed{
+      border-color: rgba(255,255,255,0.22) !important;
+      box-shadow: none !important;
+    }
+
+    /* v3.6.3: subtle glow border for topic cards (low brightness, no drop shadow) */
+    .topic-card{
+      border: 1px solid rgba(255,255,255,0.07) !important;
+      box-shadow: none !important;
+      transition: border-color 160ms ease, box-shadow 160ms ease !important;
+    }
+    .topic-card:hover,
+    .topic-card:focus-visible{
+      border-color: rgba(255,255,255,0.12) !important;
+      box-shadow: 0 0 0 1px rgba(255,255,255,255,0.06), 0 0 16px rgba(255,255,255,0.06) !important;
+    }
+    .topic-card:active,
+    .topic-card.is-pressed{
+      border-color: rgba(255,255,255,0.15) !important;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.07), 0 0 18px rgba(255,255,255,0.07) !important;
+    }
+
+    /* v3.6.7: restore quiz title font size (all topics) */
+    .quiz-title{ font-size: 26px; }
+
+    /* v3.6.8: quiz header spacing + typography tweaks */
+    .quiz-title{
+      letter-spacing: 0.02em !important; /* subtle widen */
+      font-weight: 700 !important;       /* one step down from 800 */
+      white-space: nowrap !important;
+      overflow: visible !important;      /* prevent disappearing */
+    }
+    /* ensure title container allows full width and centers */
+    .quiz-title-wrap{
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      padding: 0 10px; /* keep safe padding */
+    }
+
+    .quiz-title{
+      text-overflow: clip !important;
+    }
+
+    /* v3.6.9: balance card height ONLY for short verses (guide3, guide4, guide5, guide8) */
+    .short-verse-card{
+      min-height: 530px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-top: 52px !important;   /* rebalance for 530px card */
+      padding-bottom: 52px !important;
+    }
+    .short-verse-card #study-lines,
+    .short-verse-card #quiz-body{
+      line-height: 2.25 !important;   /* subtly expand to avoid empty bottom block */
+    }
+
+    /* text always on top */
+
+    /* v3.7.6: toggle sizing consistent for both states */
+    #study-toggle{ overflow: hidden; }
+    #toggle-thumb{
+      box-shadow: none !important;
+      filter: none !important;
+      background: rgba(255,255,255,0.14) !important;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      z-index: 1;
+    }
+    #study-toggle button{ position: relative; z-index: 2; }
+
+    /* v3.7.8-final2: topic list title subtle vertical stretch without changing font */
+    .topic-title-stretch{
+      display: inline-block;
+      transform: scaleY(1.02);
+      transform-origin: center;
+    }
+
+  </style>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "react/": "https://esm.sh/react@^19.2.4/",
+      "react": "https://esm.sh/react@^19.2.4",
+      "lucide-react": "https://esm.sh/lucide-react@^0.563.0"
+    }
+  }
+  </script>
+</head>
+
+<body class="font-sans">
+  <div id="root" class="min-h-screen w-full flex flex-col items-center relative">
+    <div class="absolute inset-0 opacity-[0.05] pointer-events-none" style="background-image: radial-gradient(#432d4c 1px, transparent 1px); background-size: 32px 32px;"></div>
+
+    <div class="w-full max-w-[430px] flex-1 flex flex-col px-5 pt-[calc(env(safe-area-inset-top)+20px)] pb-[calc(env(safe-area-inset-bottom)+20px)] z-10 mx-auto">
+
+      <!-- 1. Intro Screen -->
+      <section id="screen-intro" class="screen active animate-fade-in items-center relative w-full flex-1">
+        <div class="flex flex-col items-center text-center w-full" style="margin-top: calc(1.5rem + 22px);">
+          <h1 class="text-[2.95rem] font-classic font-black text-titleFont tracking-tighter leading-[1.38] title-vivid">
+            <span>약속의 말씀</span><br />
+            <span>내 마음에 쏙쏙</span>
+          </h1>
+
+          <div class="relative px-4 space-y-3" style="margin-top: calc(2.5rem + 2px);">
+            <!-- ✅ (수정3) 홈 슬로건: 한 줄 강제 -->
+            <p class="text-[16px] whitespace-nowrap font-serif font-bold text-mainFont tracking-tight leading-relaxed break-keep">
+              "그리스도인의 말씀이 너희 속에 풍성히 거하여"
+            </p>
+            <span class="text-[16px] font-serif font-bold text-subFont tracking-tight">골로새서 3:16</span>
+          </div>
+        </div>
+
+        <div class="w-full flex justify-center items-center" id="garden-wrap" aria-hidden="true" style="margin-top: calc(2.0rem - 6px);">
+          <svg class="garden" viewBox="-60 -40 540 320" aria-hidden="true">
+            <path class="soil" d="M18 214 C92 188, 146 240, 200 214 C254 188, 316 240, 382 214"></path>
+
+            <!-- Back Row -->
+            <g class="plant sprout" style="--x: 18px; --y: 3px; --leaf-color:rgba(128,168,156,.78);"><path class="stem" d="M0 150 L0 108"></path><ellipse class="leaf" cx="-11" cy="112" rx="11" ry="6.2"></ellipse><ellipse class="leaf" cx="11" cy="110" rx="11" ry="6.2"></ellipse></g>
+            <g class="plant flower" style="--x: 63px; --y: 7px; --petal-color:#AFCFE6;"><g transform="translate(0,150)"><path class="flowerleaf" d="M0 0 C -10 -18 -28 -26 -42 -12 C -30 4 -12 8 0 0 Z" transform="translate(-2,0)"></path><path class="flowerleaf" d="M0 0 C 10 -18 28 -26 42 -12 C 30 4 -12 8 0 0 Z" transform="translate(2,0)"></path></g><path class="stem" d="M0 150 L0 86"></path><g transform="translate(0,84)"><ellipse class="petal" cx="0" cy="-15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="-6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="0" cy="15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="-6.2" rx="10.3" ry="8.0"/><circle class="center" cx="0" cy="0" r="6.7"/></g></g>
+
+            <g class="plant sprout" style="--x: 106px; --y: 3px; --leaf-color:rgba(120,160,148,.78);"><path class="stem" d="M0 150 L0 108"></path><ellipse class="leaf" cx="-11" cy="112" rx="11" ry="6.2"></ellipse><ellipse class="leaf" cx="11" cy="110" rx="11" ry="6.2"></ellipse></g>
+            <g class="plant flower" style="--x: 151px; --y: 7px; --petal-color:#C2B4D6;"><g transform="translate(0,150)"><path class="flowerleaf" d="M0 0 C -10 -18 -28 -26 -42 -12 C -30 4 -12 8 0 0 Z" transform="translate(-2,0)"></path><path class="flowerleaf" d="M0 0 C 10 -18 28 -26 42 -12 C 30 4 -12 8 0 0 Z" transform="translate(2,0)"></path></g><path class="stem" d="M0 150 L0 86"></path><g transform="translate(0,84)"><ellipse class="petal" cx="0" cy="-15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="-6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="0" cy="15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="-6.2" rx="10.3" ry="8.0"/><circle class="center" cx="0" cy="0" r="6.7"/></g></g>
+            <g class="plant sprout" style="--x: 194px; --y: 3px; --leaf-color:rgba(138,168,136,.78);"><path class="stem" d="M0 150 L0 108"></path><ellipse class="leaf" cx="-11" cy="112" rx="11" ry="6.2"></ellipse><ellipse class="leaf" cx="11" cy="110" rx="11" ry="6.2"></ellipse></g>
+            <g class="plant flower" style="--x: 239px; --y: 7px; --petal-color:#BFE3D3;"><g transform="translate(0,150)"><path class="flowerleaf" d="M0 0 C -10 -18 -28 -26 -42 -12 C -30 4 -12 8 0 0 Z" transform="translate(-2,0)"></path><path class="flowerleaf" d="M0 0 C 10 -18 28 -26 42 -12 C 30 4 12 8 0 0 Z" transform="translate(2,0)"></path></g><path class="stem" d="M0 150 L0 86"></path><g transform="translate(0,84)"><ellipse class="petal" cx="0" cy="-15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="-6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="0" cy="15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="-6.2" rx="10.3" ry="8.0"/><circle class="center" cx="0" cy="0" r="6.7"/></g></g>
+            <g class="plant sprout" style="--x: 282px; --y: 3px; --leaf-color:rgba(120,160,148,.78);"><path class="stem" d="M0 150 L0 108"></path><ellipse class="leaf" cx="-11" cy="112" rx="11" ry="6.2"></ellipse><ellipse class="leaf" cx="11" cy="110" rx="11" ry="6.2"></ellipse></g>
+            <g class="plant flower" style="--x: 327px; --y: 7px; --petal-color:#F0B8C6;"><g transform="translate(0,150)"><path class="flowerleaf" d="M0 0 C -10 -18 -28 -26 -42 -12 C -30 4 -12 8 0 0 Z" transform="translate(-2,0)"></path><path class="flowerleaf" d="M0 0 C 10 -18 28 -26 42 -12 C 30 4 12 8 0 0 Z" transform="translate(2,0)"></path></g><path class="stem" d="M0 150 L0 86"></path><g transform="translate(0,84)"><ellipse class="petal" cx="0" cy="-15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="-6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="0" cy="15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="-6.2" rx="10.3" ry="8.0"/><circle class="center" cx="0" cy="0" r="6.7"/></g></g>
+            <g class="plant sprout" style="--x: 370px; --y: 3px; --leaf-color:rgba(138,176,154,.78);"><path class="stem" d="M0 150 L0 108"></path><ellipse class="leaf" cx="-11" cy="112" rx="11" ry="6.2"></ellipse><ellipse class="leaf" cx="11" cy="110" rx="11" ry="6.2"></ellipse></g>
+            <g class="plant flower" style="--x: 415px; --y: 7px; --petal-color:#E6DFA3;"><g transform="translate(0,150)"><path class="flowerleaf" d="M0 0 C -10 -18 -28 -26 -42 -12 C -30 4 -12 8 0 0 Z" transform="translate(-2,0)"></path><path class="flowerleaf" d="M0 0 C 10 -18 28 -26 42 -12 C 30 4 12 8 0 0 Z" transform="translate(2,0)"></path></g><path class="stem" d="M0 150 L0 86"></path><g transform="translate(0,84)"><ellipse class="petal" cx="0" cy="-15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="-6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="0" cy="15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="-6.2" rx="10.3" ry="8.0"/><circle class="center" cx="0" cy="0" r="6.7"/></g></g>
+
+            <!-- Front Row -->
+            <g class="plant flower" style="--x: 8px; --y: 49px; --petal-color:#F2D3A7;"><g transform="translate(0,150)"><path class="flowerleaf" d="M0 0 C -10 -18 -28 -26 -42 -12 C -30 4 -12 8 0 0 Z" transform="translate(-2,0)"></path><path class="flowerleaf" d="M0 0 C 10 -18 28 -26 42 -12 C 30 4 -12 8 0 0 Z" transform="translate(2,0)"></path></g><path class="stem" d="M0 150 L0 102"></path><g transform="translate(0,100)"><ellipse class="petal" cx="0" cy="-15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="-6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="0" cy="15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="-6.2" rx="10.3" ry="8.0"/><circle class="center" cx="0" cy="0" r="6.7"/></g></g>
+            <g class="plant sprout" style="--x: 53px; --y: 53px; --leaf-color:rgba(124,160,132,.78);"><path class="stem" d="M0 150 L0 112"></path><ellipse class="leaf" cx="-11" cy="116" rx="11" ry="6.2"></ellipse><ellipse class="leaf" cx="11" cy="114" rx="11" ry="6.2"></ellipse></g>
+            <g class="plant flower" style="--x: 98px; --y: 47px; --petal-color:#C7E2C9;"><g transform="translate(0,150)"><path class="flowerleaf" d="M0 0 C -10 -18 -28 -26 -42 -12 C -30 4 -12 8 0 0 Z" transform="translate(-2,0)"></path><path class="flowerleaf" d="M0 0 C 10 -18 28 -26 42 -12 C 30 4 -12 8 0 0 Z" transform="translate(2,0)"></path></g><path class="stem" d="M0 150 L0 102"></path><g transform="translate(0,100)"><ellipse class="petal" cx="0" cy="-15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="-6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="0" cy="15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="-6.2" rx="10.3" ry="8.0"/><circle class="center" cx="0" cy="0" r="6.7"/></g></g>
+            <g class="plant sprout" style="--x: 143px; --y: 53px; --leaf-color:rgba(138,168,156,.78);"><path class="stem" d="M0 150 L0 112"></path><ellipse class="leaf" cx="-11" cy="116" rx="11" ry="6.2"></ellipse><ellipse class="leaf" cx="11" cy="114" rx="11" ry="6.2"></ellipse></g>
+            <g class="plant flower" style="--x: 188px; --y: 50px; --petal-color:#D7C7F2;"><g transform="translate(0,150)"><path class="flowerleaf" d="M0 0 C -10 -18 -28 -26 -42 -12 C -30 4 -12 8 0 0 Z" transform="translate(-2,0)"></path><path class="flowerleaf" d="M0 0 C 10 -18 28 -26 42 -12 C 30 4 -12 8 0 0 Z" transform="translate(2,0)"></path></g><path class="stem" d="M0 150 L0 102"></path><g transform="translate(0,100)"><ellipse class="petal" cx="0" cy="-15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="-6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="0" cy="15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="-6.2" rx="10.3" ry="8.0"/><circle class="center" cx="0" cy="0" r="6.7"/></g></g>
+            <g class="plant sprout" style="--x: 233px; --y: 53px; --leaf-color:rgba(152,176,164,.78);"><path class="stem" d="M0 150 L0 112"></path><ellipse class="leaf" cx="-11" cy="116" rx="11" ry="6.2"></ellipse><ellipse class="leaf" cx="11" cy="114" rx="11" ry="6.2"></ellipse></g>
+            <g class="plant flower" style="--x: 278px; --y: 47px; --petal-color:#E3B5A4;"><g transform="translate(0,150)"><path class="flowerleaf" d="M0 0 C -10 -18 -28 -26 -42 -12 C -30 4 -12 8 0 0 Z" transform="translate(-2,0)"></path><path class="flowerleaf" d="M0 0 C 10 -18 28 -26 42 -12 C 30 4 12 8 0 0 Z" transform="translate(2,0)"></path></g><path class="stem" d="M0 150 L0 102"></path><g transform="translate(0,100)"><ellipse class="petal" cx="0" cy="-15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="-6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="0" cy="15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="-6.2" rx="10.3" ry="8.0"/><circle class="center" cx="0" cy="0" r="6.7"/></g></g>
+            <g class="plant sprout" style="--x: 323px; --y: 53px; --leaf-color:rgba(120,160,148,.78);"><path class="stem" d="M0 150 L0 112"></path><ellipse class="leaf" cx="-11" cy="116" rx="11" ry="6.2"></ellipse><ellipse class="leaf" cx="11" cy="114" rx="11" ry="6.2"></ellipse></g>
+            <g class="plant flower" style="--x: 368px; --y: 50px; --petal-color:#F0B0D4;"><g transform="translate(0,150)"><path class="flowerleaf" d="M0 0 C -10 -18 -28 -26 -42 -12 C -30 4 -12 8 0 0 Z" transform="translate(-2,0)"></path><path class="flowerleaf" d="M0 0 C 10 -18 28 -26 42 -12 C 30 4 -12 8 0 0 Z" transform="translate(2,0)"></path></g><path class="stem" d="M0 150 L0 102"></path><g transform="translate(0,100)"><ellipse class="petal" cx="0" cy="-15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="-6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="0" cy="15.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="6.2" rx="10.3" ry="8.0"/><ellipse class="petal" cx="-12.6" cy="-6.2" rx="10.3" ry="8.0"/><circle class="center" cx="0" cy="0" r="6.7"/></g></g>
+            <g class="plant sprout" style="--x: 413px; --y: 53px; --leaf-color:rgba(138,176,154,.78);"><path class="stem" d="M0 150 L0 112"></path><ellipse class="leaf" cx="-11" cy="116" rx="11" ry="6.2"></ellipse><ellipse class="leaf" cx="11" cy="114" rx="11" ry="6.2"></ellipse></g>
+          </svg>
+        </div>
+
+        <div class="flex justify-center w-full pb-4">
+          <!-- ✅ (수정3) 홈 도전하기 버튼: 추가 떠있는 shadow 적용 -->
+          <button class="clickable-action clickable-element cta-float-shadow group glass-card px-12 py-5 rounded-[1.9rem] flex items-center justify-center text-center relative overflow-hidden list-item-shadow border-white/10"
+            data-next="screen-topics" type="button">
+            <span class="text-[19px] font-classic font-bold text-mainFont tracking-tight">도전하기</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 2. Topics Screen -->
+      <section id="screen-topics" class="screen h-full w-full overflow-x-hidden">
+        <div class="pt-2 pb-8 flex flex-col items-center relative w-full">
+          <button class="nav-back clickable-element absolute left-0 top-0 flex items-center space-x-1 text-mainFont/40 py-3 px-1" data-to="screen-intro" type="button">
+            <i data-lucide="chevron-left" size="18"></i>
+            <span class="text-[12px] font-sans font-black tracking-widest">돌아가기</span>
+          </button>
+          <div class="pt-14 w-full text-center">
+            <h2 class="text-[23px] font-classic font-bold text-mainFont/95 uppercase tracking-[0.08em]">
+              <span class="text-mainFont/25 mr-2">[</span>암송 주제 선택하기<span class="text-mainFont/25 ml-2">]</span>
+            </h2>
+          </div>
+        </div>
+        <div id="topic-list" class="mt-2 flex-1 w-full flex flex-col space-y-4"></div>
+        <footer class="mt-16 pb-10 text-center opacity-40">
+          <p class="text-[10px] font-sans text-mainFont uppercase tracking-[0.18em] whitespace-nowrap font-black">LESSONS ON CHRISTIAN LIVING • 그리스도인의 생활 지침</p>
+        </footer>
+      </section>
+
+      <!-- 3. Study Screen -->
+      <section id="screen-study" class="screen w-full h-full animate-fade-in"></section>
+
+      <!-- 4. Quiz Screen -->
+      <section id="screen-quiz" class="screen w-full h-full animate-fade-in"></section>
+
+      <!-- 5. Ending Screen (v1: 연출 삭제) -->
+      <section id="screen-ending" class="screen w-full">
+        <div class="ending-wrap">
+          <div class="ending-top-spacer"></div>
+
+
+          <!-- ===== (v2) 엔딩 카드 (구조/수치/폰트/아이콘 완전 고정) ===== -->
+          <div class="w-full flex items-center justify-center" style="transform: translateY(70px);">
+            <div class="relative flex flex-col items-center justify-center">
+              <div class="relative animate-float">
+<div class="relative w-[300px] h-[460px] animate-card-flip cursor-pointer [transform-style:preserve-3d]">
+                    
+                    <div class="absolute inset-0 backface-hidden glass-pure border border-white/20 overflow-hidden" style="border-radius: 3.5rem;">
+                        <div class="glint-effect" ></div>
+                        <div class="absolute inset-0 z-0 flex items-center justify-center pointer-events-none translate-y-[-4.8rem]">
+                            <svg viewBox="0 0 1123 1587" class="w-[525px] h-[525px]" xmlns="http://www.w3.org/2000/svg">
+                    <g transform="translate(561.5 793.5) scale(1.05 1) translate(-561.5 -793.5)">
+                <path fill="#D6C25A" fill-rule="evenodd" d="m439.75 576.04c0.69-0.02 2.43 0.52 3.87 1.21 1.45 0.69 3.41 2.83 4.38 4.75 0.96 1.92 4.06 10.81 12 36l41.17 0.5 2.91 3.25c1.61 1.79 2.92 4.15 2.92 5.25 0 1.1-0.45 3.13-1 4.5-0.57 1.43-6.88 6.89-14.75 12.77-7.56 5.65-14.75 10.94-18.18 13.23l11.95 39-1.76 3.49c-0.97 1.91-2.89 4.12-4.26 4.89-1.39 0.79-3.61 1.15-5 0.82-1.38-0.32-7.68-4.27-14-8.77-6.32-4.51-13.52-9.66-20.5-14.73l-10.5 7.58c-5.77 4.17-13.31 9.52-16.75 11.9-3.44 2.38-7.38 4.32-8.75 4.32-1.38 0-3.85-1.12-5.5-2.5-1.65-1.37-3.25-3.74-3.55-5.25-0.36-1.8 1.37-8.88 5-20.5 3.05-9.76 5.57-18.31 5.59-19 0.03-0.69-6.95-6.54-15.5-13-10.14-7.67-15.9-12.71-16.59-14.5-0.57-1.51-0.8-3.87-0.51-5.25 0.3-1.37 1.7-3.62 3.13-5 2.57-2.48 2.74-2.5 43.43-3l4.64-14.25c2.55-7.84 5.47-16.61 6.5-19.5 1.46-4.11 2.56-5.57 5.11-6.71 1.79-0.8 3.81-1.48 4.5-1.5zm-11.49 54.46l-36.4 1 29.14 21.5c-3.86 12.01-6.34 19.66-7.99 24.75-1.66 5.09-2.78 9.25-2.51 9.25 0.27 0 6.46-4.18 13.75-9.29 7.29-5.11 13.81-9.61 14.5-10 0.75-0.43 6.94 3.27 15.5 9.26 7.84 5.48 14.39 9.87 14.56 9.75 0.17-0.12-2.08-7.75-5-16.96-2.92-9.21-5.08-16.91-4.81-17.12 0.27-0.2 7.02-5.16 15-11.02l14.5-10.65-37 0.02c-8.52-24.97-11.27-32.37-11.6-32.56-0.33-0.19-3.09 6.95-6.12 15.86z"/><path fill="#D6C25A" fill-rule="evenodd" d="m598.93 486.97c2.07-0.02 4.73 0.82 6.32 2 2.27 1.67 3.81 5.24 14.74 38.53l12.25 0.75c6.74 0.42 15.86 0.77 20.26 0.78 4.72 0.02 8.65 0.53 9.58 1.25 0.86 0.67 2.35 2.34 3.3 3.72 1.14 1.64 1.54 3.53 1.18 5.5-0.31 1.65-2.02 4.39-3.81 6.09-1.79 1.7-9.05 7.33-16.13 12.5-7.08 5.18-13.02 9.63-13.18 9.91-0.17 0.27 2.14 8.37 5.13 18 3 9.62 5.44 19.19 5.44 21.25-0.01 2.94-0.66 4.29-3.01 6.25-1.73 1.44-4.27 2.5-6 2.5-2.23 0-7.1-2.94-19-11.5-8.8-6.33-16.22-11.5-16.5-11.5-0.27 0-7.81 5.19-16.75 11.53-12.81 9.09-16.94 11.52-19.5 11.5-2.25-0.02-4.17-0.95-6.25-3.03-1.73-1.73-3-4.06-3-5.5 0-1.38 2.48-10.38 5.5-20 3.03-9.63 5.49-18.06 5.47-18.75-0.01-0.69-6.81-6.2-15.1-12.25-8.3-6.05-15.71-11.9-16.48-13-0.77-1.1-1.4-3.46-1.4-5.25 0.01-2.23 0.92-4.19 2.93-6.25 2.79-2.86 3.32-3 11.25-3 4.58 0 13.73-0.28 32.33-1.24l5.87-17.63c3.95-11.86 6.7-18.53 8.43-20.38 1.85-1.98 3.56-2.76 6.13-2.78zm-5.8 38.28l-5.13 15.75c-28.5 0-35 0.37-35 1 0 0.55 6.04 5.39 13.43 10.75 7.39 5.36 13.47 10.2 13.51 10.75 0.04 0.55-2.17 8.2-4.91 17-2.75 8.8-4.89 16.11-4.76 16.24 0.13 0.13 6.64-4.26 14.48-9.75l14.25-9.99c4.26 2.58 10.79 7.08 17.25 11.66 6.46 4.59 11.95 8.23 12.2 8.09 0.24-0.14-1.9-7.76-4.75-16.94l-5.2-16.68c21.36-15.99 27.55-20.97 27.53-21.38-0.02-0.41-7.98-0.86-17.69-1l-17.67-0.25c-8.32-24.8-10.87-32.14-11.03-32.32-0.16-0.17-0.53 0.05-0.83 0.5-0.3 0.45-2.85 7.91-5.68 16.57z"/><path fill="#D6C25A" fill-rule="evenodd" d="m744.5 576.14c0.55-0.07 2.46 0.77 4.25 1.86 2.32 1.43 3.79 3.51 5.13 7.25 1.04 2.89 3.85 11.43 10.62 32.7l18.5 0.01c10.17 0 19.96 0.46 21.75 1.02 2.02 0.64 3.82 2.15 4.75 4.02 0.83 1.65 1.52 4.01 1.53 5.25 0.02 1.24-0.8 3.38-1.83 4.75-1.03 1.38-8.49 7.45-16.57 13.5-8.08 6.05-14.68 11.56-14.66 12.25 0.02 0.69 2.54 9.24 5.62 19 3.79 12.04 5.37 18.55 4.92 20.25-0.36 1.38-1.86 3.75-3.33 5.27-1.52 1.57-3.76 2.77-5.18 2.77-1.6 0.01-8.52-4.31-36-24.04l-15.25 11.13c-8.39 6.13-16.15 11.58-17.25 12.12-1.1 0.53-3.24 0.7-4.75 0.36-1.51-0.33-3.87-1.73-5.25-3.11-1.65-1.65-2.5-3.6-2.49-5.75 0.01-1.79 2.5-11.12 5.53-20.75 3.04-9.62 5.39-17.8 5.24-18.17-0.15-0.37-6.8-5.46-14.78-11.33-7.98-5.87-15.31-11.64-16.29-12.83-0.99-1.19-1.78-3.63-1.75-5.42 0.02-1.79 0.49-4.15 1.04-5.25 0.55-1.1 2.01-2.56 3.25-3.25 1.49-0.83 8.97-1.42 42.09-2.25l6.08-18.16c3.34-9.99 6.89-19.08 7.88-20.2 0.99-1.11 2.79-2.22 4-2.45 1.21-0.23 2.65-0.48 3.2-0.55zm-7.6 41.62l-4.4 13.26-37-0.03c20.15 14.88 26.82 19.72 27.83 20.36 1.73 1.09 1.55 2.06-3.3 18.15-2.82 9.35-5 17.1-4.83 17.22 0.16 0.12 6.71-4.27 14.55-9.75 8.5-5.95 14.75-9.69 15.5-9.27 0.69 0.38 7.21 4.88 14.5 10 7.29 5.11 13.48 9.3 13.75 9.3 0.27 0-0.86-4.16-2.53-9.25-1.66-5.09-4.14-12.74-5.5-17l-2.47-7.75 29.14-21.5-36.36-1c-8.34-24.02-10.93-31.45-11.13-32-0.2-0.55-1.03 0.58-1.85 2.5-0.82 1.92-3.47 9.47-5.9 16.76z"/><path fill="#D6C25A" fill-rule="evenodd" d="m576 668.55c4.13 0.24 9.52 1.04 12 1.79 2.48 0.75 6.52 2.32 9 3.5 2.48 1.18 6.93 4.28 9.91 6.9 2.97 2.62 7.22 7.46 9.43 10.76 2.22 3.3 5.12 8.7 6.46 12 1.33 3.3 3.23 8.7 4.23 12 0.99 3.3 2.4 8.7 3.12 12 0.87 3.94 1.32 13.54 1.33 28 0 17.4-0.38 23.99-1.85 31.5-1.03 5.23-2.05 11.75-2.29 14.5-0.25 2.98 0.1 5.97 0.87 7.4 0.71 1.33 2.56 3.35 4.11 4.5 2.75 2.04 4.08 2.11 49 2.6 43.64 0.47 46.4 0.61 50.15 2.5 2.18 1.1 6.39 4.25 9.35 7 3.58 3.32 6.52 7.35 8.78 12 1.98 4.08 3.76 9.71 4.28 13.5 0.53 3.86 0.53 8.94-0.01 12.5-0.51 3.3-2.35 8.92-4.11 12.5-1.75 3.58-5.11 8.53-11.73 15.5l3.39 4c1.87 2.2 4.56 6.48 5.98 9.5 1.43 3.03 3.11 8.42 3.74 12 0.87 4.9 0.87 7.98 0 12.5-0.63 3.3-2.46 8.7-4.06 12-1.7 3.48-5.16 8.14-13.58 16.18l2.75 5.91c1.52 3.25 3.28 9.06 3.92 12.91 0.88 5.32 0.88 8.74-0.01 14.25-0.64 3.99-2.15 9.84-3.36 13-1.21 3.16-3.57 7.29-5.25 9.18-1.68 1.88-4.96 4.58-11.55 8.57l1.92 2.5c1.05 1.38 2.82 4.53 3.93 7 1.12 2.47 2.49 7.42 3.06 11 0.81 5.1 0.71 8.01-0.46 13.5-0.82 3.85-2.7 9.03-4.16 11.5-1.47 2.47-4.72 6.54-7.23 9.03-2.88 2.86-6.78 5.4-16.56 9.21l-200 0.26-7-2.91c-3.85-1.6-14.2-6.25-23-10.32-8.8-4.08-16.45-7.62-17-7.87-0.55-0.25-1.35 1.92-1.77 4.82-0.43 2.91-2.23 7.93-4 11.16-1.78 3.24-5.25 7.72-7.73 9.96-2.48 2.23-7.2 5.33-16.5 9.67l-84.05-0.51-6.47-3.15c-4.38-2.13-8.2-5.05-11.8-9-3.19-3.51-6.1-7.95-7.25-11.1-1.86-5.06-1.93-9.04-1.93-213.25l3.75-7.2c2.56-4.92 5.33-8.5 8.75-11.31 2.75-2.25 7.7-5.12 11-6.36 5.93-2.22 6.5-2.24 90-1.63l6 3.13c3.3 1.72 7.91 5.21 10.25 7.75 2.34 2.54 4.81 5.74 6.75 9.6l13.5-7.06c7.43-3.89 18.41-10.52 24.42-14.74 6-4.23 15.01-11.73 20.01-16.68 5-4.95 11.43-12.15 14.29-16 2.86-3.85 6.98-10.37 9.17-14.5 2.19-4.12 5.14-11.1 9.15-23.5l-0.04-36.5c-0.02-25.2 0.33-37.58 1.13-40 0.64-1.92 2.62-5.52 4.4-8 1.97-2.73 5.34-5.64 8.6-7.42 2.96-1.6 7.62-3.26 10.37-3.68 2.75-0.43 8.37-0.58 12.5-0.35zm-18 19.93l-2.5 2.56-1.1 78.46c-5.14 13.95-7.99 20.7-9.65 24-1.67 3.3-5.15 9.15-7.74 13-2.59 3.85-7.59 10.35-11.11 14.44-3.52 4.09-10.45 10.99-15.4 15.33-4.95 4.34-14.4 11.51-21 15.94-6.6 4.42-16.95 10.45-23 13.39-6.05 2.94-11.79 5.36-12.75 5.38-1.65 0.02-1.75 4.89-1.75 88.02v88c4.26 1.43 13.6 5.62 23.5 10.23 9.9 4.61 20.7 9.49 24 10.83l6 2.44c150.49-0.43 191.46-0.93 193.5-1.49 1.92-0.51 5.14-2.64 7.14-4.72 2-2.09 4.44-5.36 5.42-7.29 1.13-2.21 1.79-5.71 1.78-9.5 0-4.13-0.65-7.25-2.08-10-1.15-2.2-3.59-5.39-5.42-7.09-1.84-1.7-4.92-4.05-6.84-5.22-3.19-1.94-4.96-2.13-20.25-2.16-16.51-0.03-16.79-0.07-19.25-2.53-1.56-1.56-2.5-3.63-2.5-5.5 0-1.84 0.95-3.97 2.45-5.5l2.46-2.5c50.98 0.06 51.67 0 55.05-2.22 2.36-1.55 4.08-3.88 5.38-7.28 1.27-3.29 1.96-7.77 2.04-13.09 0.11-7.4-0.18-8.69-3.39-15l-3.51-6.91-44.66-1c-3.03-3.87-3.89-6.46-3.86-8.25 0.03-2.36 0.8-3.81 2.79-5.28 2.59-1.92 4.16-2.04 26.25-2.01 21.76 0.03 23.74-0.11 26.75-1.96 1.79-1.1 4.35-3.46 5.69-5.25 1.34-1.79 3.14-4.94 4-7 0.86-2.06 1.56-6.11 1.55-9-0.01-3.39-0.84-7.02-2.34-10.25-1.29-2.75-4.21-6.69-6.49-8.75-2.29-2.06-5.17-3.97-6.41-4.24-1.24-0.27-10.95-0.61-21.59-0.75l-19.34-0.26c-3.73-4.26-4.82-6.62-4.82-8 0-1.37 1.1-3.62 2.45-5l2.46-2.5 41.59 0.03c7.45-4.73 10.8-8.08 12.5-10.78 1.66-2.61 3.49-7.22 4.08-10.25 0.78-3.99 0.76-6.87-0.06-10.5-0.62-2.75-1.96-6.35-2.97-8-1.02-1.65-3.69-4.69-5.95-6.75-2.25-2.06-5.11-3.97-6.35-4.25-1.24-0.27-22.27-0.61-46.75-0.75-43.21-0.24-44.62-0.31-48.5-2.38-2.2-1.17-5.35-3.24-7-4.61-1.65-1.37-4.3-4.91-5.89-7.88-1.61-2.99-3.11-7.6-3.39-10.38-0.31-3.14 0.4-9.47 1.9-17 2.08-10.5 2.38-14.75 2.35-34-0.03-17.4-0.4-23.41-1.75-28.75-0.95-3.71-3.05-10.24-4.68-14.5-1.63-4.26-4.78-10.34-7-13.5-2.22-3.16-5.95-7.05-8.29-8.63-2.34-1.59-6.73-3.62-9.75-4.51-3.02-0.9-7.98-1.58-11-1.52-3.02 0.06-7.08 0.5-9 0.97-1.92 0.47-4.63 2.01-6 3.42zm-225.8 170.09c-1.26 1.61-2.96 4.73-3.77 6.93-1.28 3.45-1.45 17.61-1.21 103.58l0.28 99.58c5.28 8.65 7.34 10.51 11.5 12.61l5.5 2.76c57.44-0.03 74.6-0.47 76.75-1.04 2.06-0.54 5.38-2.45 7.38-4.24 1.99-1.79 4.58-5.05 5.75-7.25 2.12-4 2.12-4.01 2.12-104 0-99.99 0-100-2.12-104-1.17-2.2-3.76-5.46-5.75-7.25-2-1.79-5.32-3.7-7.38-4.24-2.16-0.58-19.22-1-40.25-0.99-36.01 0-36.57 0.03-41.5 2.31-2.75 1.27-6.03 3.63-7.3 5.24z"/></path>
+            
+                    </g>
+                </svg>
+                        </div>
+                        <div class="relative z-10 flex h-full flex-col items-center justify-between pt-[5.2rem] pb-[5.5rem] px-8">
+                            <div class="opacity-0 pointer-events-none"><span>축복의 카드</span></div>
+                            <div class="flex-1" ></div>
+                            <div class="text-center flex flex-col items-center">
+                                <h1 class="text-[#F1EEDD] text-[2.8rem] font-705 tracking-[-0.01em] leading-none font-['Noto_Serif_KR'] mb-8 drop-shadow-md" style="font-weight:700;">암송완료!</h1>
+                                <p class="text-[#D6C25A] text-[13px] tracking-[1.0em] uppercase translate-x-[0.5em] font-black font-gothic">EXCELLENT</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="absolute inset-0 rotate-y-180 backface-hidden glass-pure border border-white/20 overflow-hidden" style="border-radius: 3.5rem;">
+                        <div class="glint-effect" ></div>
+                        <div class="absolute inset-0 z-0 flex items-center justify-center pointer-events-none translate-y-[calc(-5.8rem-5px)] translateY(-5px)">
+                            <svg viewBox="0 0 1123 1587" class="w-[210px] h-[210px]" xmlns="http://www.w3.org/2000/svg">
+                    <g transform="translate(561.5 843.5) scale(2) translate(-561.5 -793.5)">
+                        <path fill="#D6C25A" fill-rule="evenodd" d="m400.5 565.15c2.2-0.07 7.82 0.3 12.5 0.83 4.68 0.53 12.55 2.13 17.5 3.55 4.95 1.42 12.15 4.1 16 5.95 3.85 1.85 10.49 5.64 14.75 8.44 4.26 2.79 11.85 9.02 16.87 13.83 5.01 4.81 12.14 12.8 15.83 17.75 3.7 4.95 9.48 13.5 12.85 19 3.36 5.5 8.38 15.06 11.16 21.25 2.77 6.19 7.07 17.21 9.56 24.5 3.14 9.2 4.51 14.85 4.5 18.5-0.02 4.78 0.45 5.89 5.31 12.5 2.93 3.99 7.32 10.63 9.75 14.75 2.43 4.13 6.49 12.23 13.63 28.5l1.34-4.5c0.73-2.47 2.87-8.33 4.75-13 1.88-4.67 4.56-10.75 5.95-13.5 1.4-2.75 5.04-9.05 8.09-14 4.3-6.96 5.61-10.02 5.78-13.5 0.12-2.47 1.67-8.77 3.43-14 1.76-5.22 5.38-14.67 8.05-21 2.67-6.33 7.68-16.46 11.13-22.53 3.45-6.06 8.97-14.81 12.27-19.44 3.3-4.64 10.5-12.98 16-18.54 5.5-5.56 13.6-12.53 18-15.49 4.4-2.96 12.05-7.29 17-9.63 4.95-2.33 12.37-5.18 16.5-6.33 4.12-1.14 11.94-2.55 17.37-3.12 6.85-0.72 13.65-0.71 22.25 0.02 6.81 0.58 16.77 2.16 22.13 3.51 5.36 1.34 13.8 3.98 18.75 5.85 4.95 1.88 15.98 6.95 24.5 11.27 8.99 4.56 16.99 9.34 19.05 11.39 1.95 1.95 4.31 5.79 5.26 8.54 0.94 2.75 1.71 6.69 1.7 8.75 0 2.06-0.72 5.89-1.59 8.5-0.87 2.61-4.05 9.92-7.06 16.25-3.02 6.33-8.46 16-12.1 21.5-4.42 6.68-10.63 14.01-18.69 22.07q-12.07 12.07-22.07 18.69c-5.5 3.65-13.83 8.4-18.5 10.56-4.67 2.16-12.77 5.29-18 6.95-5.23 1.67-13.1 3.75-17.5 4.63-4.4 0.88-12.27 2.04-17.5 2.58-5.23 0.54-15.13 0.98-22 0.98-6.88 0-18.8-0.64-26.5-1.43-7.7-0.79-18.95-2.39-25-3.55-6.05-1.17-12.58-3.02-14.5-4.13-3.38-1.95-3.54-1.95-4.79-0.18-0.71 1.01-3.47 6.11-6.14 11.33-2.66 5.23-6.05 12.88-7.51 17-1.47 4.13-3.74 11.78-5.05 17-1.31 5.23-2.88 13.1-3.49 17.5-0.71 5.1-1.08 26.13-1.02 58 0.05 27.5 0.33 50.23 0.63 50.5 0.3 0.28 8.94 0.81 19.2 1.19 10.27 0.38 24.07 1.21 30.67 1.84 6.6 0.62 19.65 2.23 29 3.56 9.35 1.34 24.87 4.04 34.5 6 9.62 1.97 24.25 5.52 32.5 7.89 8.25 2.37 19.5 5.99 25 8.05 5.5 2.05 14.05 5.49 19 7.64 4.95 2.14 13.27 6.31 18.5 9.26 5.23 2.95 13.1 8.03 17.5 11.29 4.4 3.26 10.85 8.82 14.33 12.35 3.48 3.54 7.82 8.68 9.64 11.43 1.82 2.75 3.85 7.03 4.5 9.5 0.66 2.48 0.92 6.53 0.59 9-0.33 2.48-1.94 6.64-3.58 9.25-1.64 2.61-4.86 5.99-11.33 10.25h-499.48l-4.33-3.05c-2.39-1.68-5.69-4.99-7.34-7.35-2.53-3.61-3.05-5.4-3.32-11.44-0.27-6.19 0.06-7.9 2.44-12.66 1.76-3.5 6.24-8.98 12.32-15.07 5.26-5.27 12.71-11.74 16.56-14.39 3.85-2.65 10.83-6.97 15.5-9.6 4.68-2.64 13.68-7.01 20-9.72 6.33-2.71 18.25-7.21 26.5-10 8.25-2.78 21.52-6.67 29.5-8.63 7.98-1.97 23.05-5.13 33.5-7.01 10.45-1.89 25.3-4.15 33-5.01 7.7-0.86 20.08-2.01 27.5-2.56 7.42-0.56 18-1 23.5-1 5.5 0.01 11.51-0.33 16.7-1.51l-0.46-48c-0.42-43.27-0.67-48.94-2.49-57.5-1.11-5.22-3.68-14.45-5.7-20.5-2.02-6.05-5.36-14.6-7.42-19-2.07-4.4-6.04-11.6-8.84-16-2.81-4.4-5.7-8.56-6.44-9.25-1.08-1-2.14-0.92-5.35 0.38-2.2 0.89-10.52 2.68-18.5 3.99-7.98 1.31-20.12 2.83-27 3.38-6.87 0.56-16.66 1.01-21.75 1-5.09 0-13.64-0.48-19-1.06-5.36-0.58-13.8-1.89-18.75-2.9-4.95-1.02-12.6-3.04-17-4.5-4.4-1.47-12.5-4.8-18-7.41-5.5-2.61-13.37-7.02-17.5-9.79-4.12-2.77-10.63-7.7-14.45-10.94-3.82-3.25-10.27-9.73-14.34-14.4-4.07-4.67-9.48-11.65-12.04-15.5-2.56-3.85-7.15-11.95-10.21-18-3.05-6.05-6.61-14.37-7.91-18.5-1.86-5.89-2.23-8.68-1.71-13 0.36-3.03 1.78-7.41 3.16-9.75 1.37-2.34 4.41-5.54 6.75-7.12 2.34-1.58 10.55-6.07 18.25-9.97 7.7-3.9 18.27-8.63 23.5-10.51 5.23-1.88 13.55-4.42 18.5-5.65 4.95-1.23 13.05-2.57 18-2.98 4.95-0.4 10.8-0.8 13-0.87zm-28 19.79c-4.4 1.03-12.5 3.53-18 5.56-5.5 2.03-15.62 6.59-22.5 10.15-6.87 3.56-13.51 7.56-14.75 8.91-1.29 1.4-2.25 3.72-2.25 5.44 0 1.65 1.06 5.81 2.36 9.25 1.3 3.44 4.05 9.63 6.11 13.75 2.06 4.13 6.29 11.32 9.39 15.98 3.1 4.66 9.24 12.26 13.64 16.88 4.4 4.62 11.38 10.94 15.5 14.04 4.13 3.11 12 7.95 17.5 10.76 5.5 2.81 13.38 6.24 17.5 7.61 4.13 1.37 11.77 3.43 17 4.56 5.23 1.13 14.23 2.54 20 3.12 5.77 0.59 14.33 1.06 19 1.06 4.68 0 13.23-0.47 19-1.04 5.77-0.58 15.9-1.95 22.5-3.05 6.6-1.1 12.79-2.21 13.75-2.46 1.45-0.38 1.1-1.07-2-3.97-2.06-1.93-8.92-7.02-15.25-11.31-6.32-4.29-16.67-10.32-23-13.42-6.32-3.09-15.32-7.05-20-8.79-4.67-1.75-13-4.49-18.5-6.09-5.5-1.61-14.95-3.78-21-4.84-6.05-1.05-13.48-2.22-16.5-2.6-3.02-0.37-6.74-1.3-8.25-2.06-1.6-0.8-3.02-2.53-3.39-4.13-0.35-1.51-0.24-3.86 0.25-5.21 0.49-1.35 2.11-3.15 3.61-4 2.38-1.35 3.94-1.38 12.5-0.26 5.38 0.7 14.05 2.15 19.28 3.21 5.23 1.07 13.55 3.1 18.5 4.52 4.95 1.42 13.27 4.16 18.5 6.09 5.23 1.92 14.9 6.17 21.5 9.42 6.6 3.26 17.51 9.54 24.25 13.95 6.74 4.42 12.26 7.69 12.28 7.28 0.01-0.41-1.84-5.25-4.11-10.75-2.28-5.5-5.95-13.6-8.17-18-2.22-4.4-6.42-11.83-9.33-16.5-2.91-4.67-8.18-12.1-11.72-16.5-3.53-4.4-9.3-10.67-12.81-13.93-3.51-3.27-9.99-8.29-14.39-11.17-4.4-2.88-11.37-6.59-15.5-8.26-4.12-1.66-10.2-3.74-13.5-4.62-3.3-0.87-10.27-1.77-15.5-1.99-5.23-0.22-13.1 0.03-17.5 0.57-4.4 0.53-11.6 1.81-16 2.84zm319 0.58c-4.95 1.43-12.6 4.5-17 6.82-4.4 2.32-10.7 6.29-14 8.81-3.3 2.53-8.78 7.47-12.19 10.97-3.4 3.51-7.62 8.18-9.39 10.38-1.76 2.2-5.88 8.05-9.16 13-3.28 4.95-7.78 12.6-10.01 17-2.22 4.4-5.54 11.49-7.39 15.75-1.85 4.26-3.13 7.75-2.86 7.75 0.27 0 3.09-2 6.25-4.44 3.16-2.44 9.8-6.96 14.75-10.05 4.95-3.1 13.95-8.04 20-10.98 6.05-2.95 15.27-6.94 20.5-8.87 5.23-1.93 14.23-4.88 20-6.54 5.77-1.66 15-3.92 20.5-5.02 5.5-1.1 13.38-2.31 17.5-2.69 4.13-0.38 8.74-0.41 10.25-0.05 1.68 0.39 3.33 1.81 4.25 3.64 0.83 1.65 1.5 3.67 1.5 4.5 0 0.83-1.01 2.64-2.25 4.02-1.97 2.21-3.88 2.76-15.25 4.41-7.15 1.04-18.4 3.25-25 4.92-6.6 1.67-15.6 4.24-20 5.7-4.4 1.46-14.08 5.56-21.5 9.12-7.42 3.55-16.2 8.09-19.5 10.08-3.3 1.99-10.05 6.63-15 10.31-4.95 3.69-11.7 9.45-15 12.81-3.96 4.03-5.66 6.44-5 7.08 0.55 0.54 5.5 1.91 11 3.06 5.5 1.14 16.3 2.72 24 3.51 7.7 0.79 18.27 1.45 23.5 1.47 5.23 0.01 14.23-0.44 20-1 5.77-0.57 13.65-1.72 17.5-2.56 3.85-0.84 10.15-2.46 14-3.59 3.85-1.14 11.27-4.07 16.5-6.51 5.23-2.45 13.33-7 18-10.12 4.67-3.11 12.57-9.72 17.55-14.69 4.97-4.96 11.71-12.85 14.97-17.52 3.26-4.67 8.09-12.77 10.74-18 2.64-5.22 5.76-12.42 6.92-16 1.3-4.02 1.86-7.55 1.46-9.25-0.42-1.82-2.25-3.78-5.39-5.79-2.61-1.67-9.7-5.47-15.75-8.43-6.05-2.96-14.15-6.57-18-8.01-3.85-1.44-11.5-3.75-17-5.14-5.5-1.39-12.92-2.73-16.5-2.99-3.58-0.26-7.85-0.59-9.5-0.74-1.65-0.15-6.83 0.07-11.5 0.5-4.67 0.42-12.55 1.94-17.5 3.37zm-173 322.5c-9.35 0.6-24.42 1.99-33.5 3.07-9.07 1.08-23.7 3.3-32.5 4.93-8.8 1.63-22.3 4.57-30 6.53-7.7 1.97-19.62 5.41-26.5 7.65-6.87 2.24-17.23 6.06-23 8.48-5.77 2.43-14.32 6.48-19 9-4.67 2.53-11.87 6.86-16 9.62-4.12 2.76-10.76 8.33-14.75 12.36-3.99 4.04-8.15 9.14-9.25 11.34-1.1 2.2-2.02 4.56-2.03 5.25-0.02 0.69 0.88 2.49 2 4l2.03 2.75c478.56 0.08 489.6 0 491.81-1.71 1.42-1.1 2.35-2.94 2.42-4.79 0.08-1.85-1.05-4.72-2.95-7.5-1.69-2.47-6.38-7.68-10.42-11.57-4.05-3.89-10.06-8.89-13.36-11.12-3.3-2.22-9.83-6.09-14.5-8.61-4.67-2.51-13.67-6.69-20-9.27-6.33-2.59-15.33-6-20-7.59-4.67-1.59-14.12-4.44-21-6.33-6.87-1.89-20.37-5.02-30-6.94-9.62-1.93-24.25-4.39-32.5-5.47-8.25-1.08-20.4-2.48-27-3.12-6.6-0.64-21.68-1.46-33.51-1.82-11.82-0.36-27.8-0.57-35.5-0.46-7.69 0.12-21.64 0.71-30.99 1.32z" />
+                    </g>
+                </svg>
+                        </div>
+                        <div class="relative z-10 flex h-full flex-col items-center justify-between pt-[5.2rem] pb-[4.8rem] px-8">
+                            <div class="flex-1" ></div>
+                            <div class="w-full flex flex-col items-center">
+                                <p class="text-[#F1EEDD] text-[1.24rem] text-center font-bold mb-6 break-keep font-['Noto_Serif_KR'] drop-shadow-md tracking-[0.015em]" style="line-height: calc(1.9em - 3px); width: 236px; margin-left:auto; margin-right:auto; white-space: normal; text-align:center;"><span style="display:block; width:100%; white-space:nowrap;">"이 말씀이 너희 믿는 자</span><span style="display:block; width:100%; white-space:nowrap;">가운데서 역사하느니라"</span></p>
+<div class="w-[35%] h-[2px] bg-gradient-to-r from-transparent via-[#D6C25A]/60 to-transparent mb-6" ></div>
+                                <p class="text-[#D6C25A] text-[14px] tracking-[0.4em] uppercase translate-x-[0.2em] font-gothic" style="margin:0; font-family:Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', Arial, sans-serif; font-size:14px; font-weight:500; letter-spacing:0.5em; line-height:1.25; -webkit-font-smoothing:antialiased; width:234px; margin-left:auto; margin-right:auto;">데살로니가전서 2:13</p>
 </div>
+                        </div>
+                    </div>
+                </div>
+              </div>
+              <div class="absolute -bottom-12 w-36 h-5 bg-black/15 rounded-[100%] blur-xl animate-shadow" style="transform: rotateX(75deg);"></div>
+            </div>
+          </div>
+
+          <div class="ending-push"></div>
+
+          <div class="ending-cta flex justify-center w-full mt-auto pb-4" style="transform: translateY(-5px);">
+            <!-- ✅ 원본 엔딩 홈으로 버튼: 그대로 유지 (id/클래스/패딩/텍스트 전부 유지) -->
+            <button id="ending-home-btn" class="clickable-element cta-float-shadow ending-home-btn clickable-action group glass-card px-11 py-5 rounded-[1.9rem] flex items-center justify-center text-center relative overflow-hidden list-item-shadow border-white/10 font-classic" type="button">
+             <span class="text-[#3d2b29] font-classic" style="font-family:'Noto Serif KR',serif;font-size:19px;letter-spacing:0.02em;line-height:1.3;font-weight:500;text-shadow:0 0 0.35px currentColor;">처음으로</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script>
+        const BIBLE_VERSES = [
+      { id: "guide1", topic: "그리스도 안의 생활", reference: "요한복음 15:5", content: "나는 포도나무요\n너희는 가지라\n그가 내 안에,\n내가 그 안에 거하면\n사람이 열매를\n많이 맺나니\n나를 떠나서는\n너희가 아무 것도\n할 수 없음이라", easyContent: "나는 포도나무요,\n너희는 가지다\n사람이 내 안에 있고\n내가 그 안에 있으면,\n그는 열매를 많이 맺는다\n그러나 나를 떠나서는\n너희가 아무것도\n할 수 없다" },
+      { id: "guide2", topic: "하나님의 말씀에 의한 생활", reference: "사도행전 20:32", content: "지금 내가 여러분을\n주와 및 그 은혜의\n말씀에 부탁하노니\n그 말씀이 여러분을\n능히 든든히 세우사\n거룩하게 하심을 입은\n모든 자 가운데\n기업이 있게 하시리라", easyContent: "이제 나는 하나님과\n하나님의 은혜의 말씀에\n여러분을 맡깁니다\n그 말씀은 여러분을\n능히 세울 수 있고\n모든 거룩한 백성들과\n함께 기업을 받을 수 있는\n말씀입니다" },
+      { id: "guide3", topic: "하나님의 성령에 의한 생활", reference: "로마서 8:14", content: "무릇 하나님의 영으로\n인도함을 받는 사람은\n곧 하나님의 아들이라", easyContent: "왜냐하면\n하나님의 영으로\n인도받는 사람들은\n누구나 하나님의 자녀이기\n때문입니다" },
+      { id: "guide4", topic: "믿음에 의한 생활", reference: "고린도후서 5:7", content: "이는 우리가\n믿음으로 행하고\n보는 것으로 행하지\n아니함이로라", easyContent: "사실 우리는\n믿음으로\n사는 것이지,\n보는 것으로\n사는 것이 아닙니다" },
+      { id: "guide5", topic: "사랑에 의한 생활", reference: "요한일서 4:11", content: "사랑하는 자들아\n하나님이 이같이\n우리를 사랑하셨은즉\n우리도 서로 사랑하는\n것이 마땅하도다", easyContent: "사랑하는 친구 여러분\n하나님께서 이처럼\n우리를 사랑해 주셨으니\n우리 역시 서로를\n사랑해야만 합니다" },
+      { id: "guide6", topic: "그리스도인의 교제하는 생활", reference: "요한일서 1:7", content: "그가 빛 가운데 계신 것\n같이 우리도\n빛 가운데 행하면\n우리가 서로\n사귐이 있고\n그 아들 예수의 피가\n우리를 모든 죄에서\n깨끗하게\n하실 것이요", easyContent: "하나님께서\n빛 가운데 계시기에\n우리 역시 빛 가운데서\n살아야 합니다.\n우리가 빛 가운데\n살게 되면 서로\n교제하게 됩니다\n또한 하나님의 아들이신\n예수 그리스도의 피가\n우리의 모든 죄를 깨끗이\n씻어 주실 것입니다" },
+      { id: "guide7", topic: "증인으로서의 생활", reference: "베드로전서 3:15", content: "너희 마음에 그리스도를\n주로 삼아 거룩하게 하고\n너희 속에 있는\n소망에 관한 이유를\n묻는 자에게는\n대답할 것을\n항상 준비하되\n온유와 두려움으로 하고", easyContent: "마음속에 그리스도만\n거룩한 주님으로\n모시십시오\n여러분이 가지고 있는\n소망에 관해\n묻는 사람들에게\n대답할 말을\n준비해 두십시오" },
+      { id: "guide8", topic: "후히드리는 생활", reference: "고린도후서 9:7", content: "각각 그 마음에\n정한 대로 할 것이요\n인색함으로나\n억지로 하지 말지니\n하나님은\n즐겨 내는 자를\n사랑하시느니라", easyContent: "각자 자기가 마음에\n결정한 대로 내고,\n내키지 않는 마음이나\n억지로는 내지 마십시오\n하나님께서는\n흔쾌히 내는 사람을\n사랑하십니다" }
+    ];
+// ===== LOCKED DATA (v3.3.2) =====
+try {
+  BIBLE_VERSES.forEach(v => Object.freeze(v));
+  Object.freeze(BIBLE_VERSES);
+  console.info("[LOCKED] BIBLE_VERSES frozen: topic text cannot be modified.");
+} catch (e) {
+  console.warn("[LOCKED] Freeze failed:", e);
+}
+
+
+    let currentVerse = null;
+    let quiz = null;
+    console.info("[LOCKED] Quiz engine: ORIGINAL (blank 10, 4-choice)" );
+
+
+    let studyVersion = "kr"; // v2.1: 학습 화면 번역 탭 상태
+
+    // v2.1: 긴 문장을 읽기 좋은 '의미 호흡' 단위로 자동 줄바꿈(최소 변경)
+    function formatVerseContent(raw, maxChars = 18) {
+      const text = (raw || "").trim();
+      if (!text) return "";
+      // 이미 사용자가 줄바꿈을 넣어둔 경우는 그대로 사용
+      if (text.includes("\n")) return text;
+
+      const words = text.split(/\s+/).filter(Boolean);
+      const lines = [];
+      let line = "";
+
+      const pushLine = () => {
+        const trimmed = line.trim();
+        if (trimmed) lines.push(trimmed);
+        line = "";
+      };
+
+      for (const w of words) {
+        const tentative = line ? (line + " " + w) : w;
+
+        // 쉼표/구두점 뒤는 줄바꿈 후보
+        const endsWithBreakPunct = /[,:;]$/.test(w);
+
+        // 글자수 기준(한글은 글자 수가 체감 길이와 비슷해서 단순 기준이 실용적)
+        if (tentative.length > maxChars && line) {
+          pushLine();
+          line = w;
+          if (endsWithBreakPunct) pushLine();
+          continue;
+        }
+
+        line = tentative;
+        if (endsWithBreakPunct && line.length >= Math.floor(maxChars * 0.75)) {
+          pushLine();
+        }
+      }
+      pushLine();
+      return lines.join("\n");
+    }
+
+    // v2.1: 텍스트가 길어도 한 줄에서 '잘리지 않고' 아이콘/진행 UI를 밀지 않도록 자동 축소
+    function fitTextToContainer(el, minPx = 16) {
+      if (!el) return;
+      const parent = el.parentElement;
+      if (!parent) return;
+
+      const style = window.getComputedStyle(el);
+      const maxPx = parseFloat(style.fontSize) || 22;
+
+      // 한 줄 유지
+      el.style.whiteSpace = "nowrap";
+
+      // 초기화
+      el.style.fontSize = maxPx + "px";
+
+      // 축소 루프
+      let size = maxPx;
+      const maxIterations = 40;
+      let iter = 0;
+      while (iter < maxIterations && size > minPx && el.scrollWidth > parent.clientWidth) {
+        size -= 0.5;
+        el.style.fontSize = size + "px";
+        iter += 1;
+      }
+    }
+
+
+    function performAction(element, callback) {
+      if (!element) return;
+      if (element.classList.contains("is-pressing")) return;
+      element.classList.add("is-pressing");
+      setTimeout(() => {
+        element.classList.remove("is-pressing");
+        setTimeout(() => callback(), 85);
+      }, 120);
+    }
+
+    function navigateTo(screenId) {
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+      const target = document.getElementById(screenId);
+      if (target) {
+        target.classList.add("active");
+        window.scrollTo(0, 0);
+        if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
+
+
+        if (screenId === "screen-intro") restartGardenAnim();
+
+        /* (v1) 엔딩 등장 연출(ending-enter) 삭제: 여기서 아무 것도 추가하지 않음 */
+      }
+    }
+
+    function restartGardenAnim() {
+      const wrap = document.getElementById("garden-wrap");
+      if (!wrap) return;
+      wrap.classList.remove("play");
+      void wrap.offsetWidth;
+      wrap.classList.add("play");
+    }
+
+    function initNavigation() {
+      /* ✅ clickable-action은 data-next 있는 버튼만 처리 (홈으로 버튼은 별도 id 리스너가 담당) */
+      document.querySelectorAll(".clickable-action").forEach(btn => {
+        btn.addEventListener("click", function () {
+          const next = this.getAttribute("data-next");
+          if (!next) return;
+          performAction(this, () => navigateTo(next));
+        });
+      });
+
+      document.querySelectorAll(".nav-back").forEach(btn => {
+        btn.addEventListener("click", function () {
+          const to = this.getAttribute("data-to");
+          if (to) performAction(this, () => navigateTo(to));
+        });
+      });
+
+      const homeBtn = document.getElementById("ending-home-btn");
+      if (homeBtn) {
+        homeBtn.addEventListener("click", function(){
+          performAction(this, () => navigateTo("screen-intro"));
+        });
+      }
+    }
+
+    // ✅ v3.3.6: renderQuiz()에서 호출될 수 있는 네비게이션 핸들러 (퀴즈 화면엔 별도 네비게이션 없음)
+    function attachNavHandlers() {
+      // no-op (legacy call safe)
+      return;
+    }
+
+
+    function initTopics() {
+      const list = document.getElementById("topic-list");
+      if (!list) return;
+      list.innerHTML = "";
+      BIBLE_VERSES.forEach((verse, index) => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "topic-card clickable-element w-full group glass-card px-6 py-5 rounded-[2.2rem] flex items-stretch text-left relative overflow-hidden list-item-shadow border-white/10";
+        card.innerHTML = `
+          <div class="flex items-center gap-4 flex-1 min-w-0 relative z-10">
+            <div class="shrink-0 self-center">
+              <span class="text-[20px] font-classic font-extrabold tracking-tight text-mainFont/45 leading-[1.15]">0${index + 1}</span>
+            </div>
+
+            <div class="min-w-0 flex-1">
+              <div class="topic-title-one-line font-classic font-bold text-mainFont/92 tracking-tight leading-[1.32] break-keep topic-title-stretch">
+                ${escapeHTML(verse.topic)}
+              </div>
+              <div class="mt-[2px] text-[12px] font-sans font-semibold text-mainFont/45 tracking-[0.22em] leading-[1.02] break-keep">
+                ${escapeHTML(verse.reference)}
+              </div>
+            </div>
+          </div>
+</div>
+        `;
+        card.addEventListener("click", () => {
+          // highlight border briefly before navigating
+          card.classList.add("is-pressed");
+          setTimeout(() => {
+            currentVerse = verse;
+            renderStudy();
+            navigateTo("screen-study");
+            card.classList.remove("is-pressed");
+          }, 120);
+        });
+        list.appendChild(card);
+      });
+      if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
+    }
+
+    function renderStudy() {
+      const study = document.getElementById("screen-study");
+      if (!study || !currentVerse) return;
+
+      
+      const isShort = ["guide3","guide4","guide5"].includes(currentVerse.id);
+      const shortClass = isShort ? " short-verse-card" : "";
+const kkText = currentVerse.content; // preserve manual line breaks
+      // 쉬운성경은 아직 데이터가 없으므로 UI만 준비 (나중에 currentVerse.easyContent로 확장 가능)
+      const easyText = currentVerse.easyContent ? currentVerse.easyContent : null; // preserve manual line breaks
+
+      study.innerHTML = `
+        <div class="mb-2">
+          <button class="nav-back clickable-element flex items-center space-x-1 text-mainFont/40 py-3 px-1" data-to="screen-topics" type="button">
+            <i data-lucide="chevron-left" size="18"></i>
+            <span class="text-[12px] font-sans font-black tracking-widest">돌아가기</span>
+          </button>
+        </div>
+
+        <div class="px-1 text-center">
+          <h2 class="text-[26px] font-classic font-black text-mainFont/92 tracking-tight leading-[1.25] break-keep whitespace-normal text-center mx-auto max-w-[22rem]">
+            ${escapeHTML(currentVerse.topic)}
+          </h2>
+          <div class="mt-5 flex justify-center">
+  <div id="study-toggle" class="relative w-[240px] h-[44px] rounded-[999px] bg-white/10 border border-white/15 backdrop-blur-md p-1 flex items-stretch overflow-hidden">
+    <div id="toggle-thumb" class="absolute rounded-[999px] glass-card border border-white/10 transition-transform duration-200 ease-out" style="top:4px; bottom:4px; left:4px; width: calc((100% - 8px) / 2);"></div>
+    <button id="tab-kk" type="button" class="relative z-10 flex-1 h-full">
+      개역개정
+    </button>
+    <button id="tab-easy" type="button" class="relative z-10 flex-1 h-full">
+      쉬운성경
+    </button>
+  </div>
+</div>
+        </div>
+
+        <div class="mt-6 flex-1 flex flex-col">
+          <div class="relative mt-[3px] px-8 py-10 glass-card rounded-[2.7rem] study-card-shadow text-center overflow-hidden${shortClass}">
+            <div class="absolute inset-0 opacity-[0.08] pointer-events-none" style="background-image: radial-gradient(#432d4c 1px, transparent 1px); background-size: 26px 26px;"></div>
+
+            <div class="relative z-10 study-text-pack">
+              <div id="study-lines" class="bible-text text-[1.65rem] font-bold text-mainFont leading-[1.9] break-keep"></div>
+
+              <div class="mt-8 pt-0">
+                <p id="study-ref" class="bible-text text-[1.65rem] font-bold text-mainFont leading-[1.9] break-keep">
+                  ${escapeHTML(currentVerse.reference)}
+                </p>
+              </div>
+
+              <div id="easy-note" class="mt-4 text-[12px] font-sans font-bold text-mainFont/45 tracking-widest hidden">
+                쉬운성경 본문은 추후 추가됩니다.
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 flex justify-center">
+            <button id="btn-start-quiz" type="button" class="clickable-element btn-primary px-12 py-5 rounded-[1.9rem] flex items-center justify-center text-center relative overflow-hidden list-item-shadow border-white/10">
+              <span class="text-[18px] font-classic font-bold tracking-tight">퀴즈 시작</span>
+            </button>
+          </div>
+        </div>
+      `;
+
+      const linesEl = document.getElementById("study-lines");
+      const easyNote = document.getElementById("easy-note");
+      const tabKk = document.getElementById("tab-kk");
+      const tabEasy = document.getElementById("tab-easy");
+
+      const renderLines = (textLines, isEasy) => {
+        if (!linesEl) return;
+        const lines = (textLines || "").split("\n").filter(Boolean);
+        linesEl.innerHTML = lines.map(l => `<div class="block">${escapeHTML(l)}</div>`).join("");
+        if (easyNote) {
+          const show = isEasy && !easyText;
+          easyNote.classList.toggle("hidden", !show);
+        }
+      };
+
+      const setActiveTab = (which) => {
+        const isEasy = which === "easy";
+        const thumb = document.getElementById("toggle-thumb");
+
+        if (thumb) {
+          thumb.style.transform = isEasy ? "translateX(100%)" : "translateX(0%)";
+        }
+
+        if (tabKk && tabEasy) {
+          tabKk.classList.toggle("text-mainFont/90", !isEasy);
+          tabKk.classList.toggle("text-mainFont/60", isEasy);
+
+          tabEasy.classList.toggle("text-mainFont/90", isEasy);
+          tabEasy.classList.toggle("text-mainFont/60", !isEasy);
+
+          tabKk.setAttribute("aria-pressed", String(!isEasy));
+          tabEasy.setAttribute("aria-pressed", String(isEasy));
+        }
+
+        renderLines(isEasy ? (easyText || kkText) : kkText, isEasy);
+      };
+
+      if (tabKk) tabKk.addEventListener("click", () => setActiveTab("kk"));
+      if (tabEasy) tabEasy.addEventListener("click", () => setActiveTab("easy"));
+
+      setActiveTab("kk");
+
+      const backBtn = study.querySelector(".nav-back");
+      if (backBtn) backBtn.addEventListener("click", function(){
+        const to = this.dataset.to || "screen-topics";
+        performAction(this, () => { navigateTo(to); });
+      });
+
+      const startBtn = document.getElementById("btn-start-quiz");
+      if (startBtn) startBtn.addEventListener("click", function(){
+        performAction(this, () => { navigateTo("screen-quiz"); startQuiz(); });
+      });
+
+      if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
+    }
+
+    function startQuiz() {
+      quiz = buildQuizFromVerse(currentVerse, 10);
+      renderQuiz();
+    }
+
+    function buildQuizFromVerse(verse, blankCount) {
+      const lines = (verse.content || "").split("\n"); // preserve manual line breaks
+      const quoteLine = verse.reference;
+      const tokenize = (str) => str.split(/\s+/).map(t => t.trim()).filter(Boolean);
+      const lineTokens = lines.map(tokenize);
+      const quoteTokens = tokenize(quoteLine);
+
+      const flat = [];
+      lineTokens.forEach((arr, lineIdx) => arr.forEach((tok, tokIdx) => flat.push({ where: "body", lineIdx, tokIdx, tok })));
+      quoteTokens.forEach((tok, tokIdx) => flat.push({ where: "quote", lineIdx: 999, tokIdx, tok }));
+
+      const isMeaningful = (t) => t && !/^[\-\–—\(\)\[\]{}"“”'‘’.,!?]+$/.test(t) && t.replace(/[^\w가-힣:.-]/g,"").length >= 2;
+      const candidates = flat.map((x, idx) => ({ ...x, idx })).filter(x => isMeaningful(x.tok));
+      const pickCount = Math.min(blankCount, candidates.length);
+      const picked = shuffle([...candidates]).slice(0, pickCount).sort((a, b) => a.idx - b.idx).map((x, order) => ({
+        id: order,
+        correct: x.tok,
+        filled: null,
+        meta: { idx: x.idx, where: x.where, lineIdx: x.lineIdx, tokIdx: x.tokIdx }
+      }));
+      const blankByFlatIdx = new Map();
+      picked.forEach(b => blankByFlatIdx.set(b.meta.idx, b.id));
+
+      return {
+        verseId: verse.id,
+        topic: verse.topic,
+        reference: verse.reference,
+        bodyLines: lines,
+        lineTokens,
+        quoteTokens,
+        flat,
+        blanks: picked,
+        blankByFlatIdx,
+        active: 0,
+        completed: false,
+        dimmedWrong: new Set(),
+        didScheduleEnding: false
+      };
+    }
+
+    function renderQuiz() {
+      const quizEl = document.getElementById("screen-quiz");
+      if (!quizEl || !quiz) return;
+
+      
+      const isShort = ["guide3","guide4","guide5"].includes(currentVerse.id);
+      const shortClass = isShort ? " short-verse-card" : "";
+const total = quiz.blanks.length;
+      const done = quiz.blanks.filter(b => b.filled !== null).length;
+      const progressPct = total === 0 ? 0 : Math.round((done / total) * 100);
+
+      quizEl.innerHTML = `
+        <div style="padding-top: 8px; padding-bottom: 0px;">
+          <div class="relative flex items-center justify-center">
+<div class="text-center px-6 pt-[10px] w-full">
+                            <div class="quiz-title"
+                   style="
+                     font-family: var(--font-classic);
+                     font-weight: 900;
+                     font-size: ${quiz.verseId === 'guide6' ? '25px' : '26px'};
+                     color: rgba(61,43,41,0.92);
+                     letter-spacing: -0.02em;
+                     line-height: 1.2;
+                     margin: 0 auto;
+                     max-width: 23.5rem;
+                     white-space: nowrap;
+                     overflow: ${quiz.verseId === 'guide6' ? 'visible' : 'hidden'};
+                     text-overflow: ${quiz.verseId === 'guide6' ? 'clip' : 'ellipsis'};
+                   ">
+                ${escapeHTML(quiz.topic)}
+              </div>
+            </div>
+          </div>
+
+          <div class="quiz-progress-dots" style="margin-top: 20px; margin-bottom: 20px;">${Array.from({length: total}).map((_, i) => `<span class="quiz-dot ${i < done ? "is-filled" : ""}"></span>`).join("")}</div>
+        </div>
+
+        <div class="flex-1 flex flex-col">
+          <div class="relative px-8 py-10 glass-card rounded-[2.7rem] study-card-shadow text-center overflow-hidden${shortClass}">
+            <div class="absolute inset-0 opacity-[0.08] pointer-events-none" style="background-image: radial-gradient(#432d4c 1px, transparent 1px); background-size: 26px 26px;"></div>
+
+            <div class="relative z-10">
+              <div id="quiz-body" class="bible-text leading-[1.9] break-keep">
+                ${renderQuizBodyHTML()}
+              </div>
+
+              <div class="mt-8 pt-0">
+                <div class="quiz-quote text-[16px] font-serif font-bold text-subFont/80 tracking-tight">
+                  ${renderQuizQuoteHTML()}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6" id="quiz-choice-area">${renderChoiceAreaHTML()}</div>
+        </div>
+      `;
+
+      attachNavHandlers();
+      bindChoiceHandlers();
+      if (quiz && quiz.completed) scheduleEndingTransition();
+      if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
+    }
+
+    function renderQuizBodyHTML() {
+      let html = "";
+      let flatIdx = 0;
+      quiz.lineTokens.forEach((tokens) => {
+        const lineParts = tokens.map((tok) => {
+          const id = quiz.blankByFlatIdx.get(flatIdx);
+          const blank = id !== undefined ? quiz.blanks[id] : null;
+          const isActive = blank && id === quiz.active;
+          const isFilled = blank && blank.filled !== null;
+          const out = blank
+            ? `<span class="quiz-blank ${isFilled ? "is-filled" : ""} ${isActive && !isFilled ? "is-active" : ""}">${isFilled ? escapeHTML(blank.correct) : ""}</span>`
+            : escapeHTML(tok);
+          flatIdx++;
+          return out;
+        }).join(" ");
+        html += `<span class="quiz-line text-[1.7rem] font-serif font-bold text-mainFont break-keep">${lineParts}</span>`;
+      });
+      return html;
+    }
+
+    function renderQuizQuoteHTML() {
+      const bodyTokenCount = quiz.lineTokens.reduce((acc, arr) => acc + arr.length, 0);
+      let flatIdx = bodyTokenCount;
+      const parts = quiz.quoteTokens.map((tok) => {
+        const id = quiz.blankByFlatIdx.get(flatIdx);
+        const blank = id !== undefined ? quiz.blanks[id] : null;
+        const isActive = blank && id === quiz.active;
+        const isFilled = blank && blank.filled !== null;
+        const out = blank
+          ? `<span class="quiz-blank ${isFilled ? "is-filled" : ""} ${isActive && !isFilled ? "is-active" : ""}">${isFilled ? escapeHTML(blank.correct) : ""}</span>`
+          : escapeHTML(tok);
+        flatIdx++;
+        return out;
+      }).join(" ");
+      return `<div class="mt-10 quiz-quote text-[1.7rem] font-serif font-bold text-mainFont break-keep">${parts}</div>`;
+    }
+
+    function renderChoiceAreaHTML() {
+      if (quiz.active >= quiz.blanks.length) { quiz.completed = true; return ""; }
+      const activeBlank = quiz.blanks[quiz.active];
+      const choices = generateChoices(activeBlank.correct);
+      return `<div id="quiz-choice-area" class="grid grid-cols-2 gap-3">
+        ${choices.map((w, idx) => {
+          const key = `c_${quiz.active}_${idx}_${w}`;
+          const dim = quiz.dimmedWrong.has(key) ? "is-dimmed" : "";
+          return `<button class="choice-btn clickable-element ${dim}" data-choice="${escapeAttr(w)}" data-key="${escapeAttr(key)}" type="button">
+            <span class="choice-label">${escapeHTML(w)}</span>
+          </button>`;
+        }).join("")}
+      </div>`;
+    }
+
+    function bindChoiceHandlers() {
+      const area = document.getElementById("quiz-choice-area");
+      if (!area) return;
+      area.querySelectorAll("button[data-choice]").forEach(btn => {
+        btn.addEventListener("click", function () {
+          if (quiz.completed) return;
+
+          const choice = this.getAttribute("data-choice");
+          const key = this.getAttribute("data-key");
+          const activeBlank = quiz.blanks[quiz.active];
+          if (!activeBlank) return;
+
+          if (choice !== activeBlank.correct) {
+            quiz.dimmedWrong.add(key);
+            this.classList.add("is-dimmed");
+            return;
+          }
+
+          this.classList.add("is-correct");
+          setTimeout(() => {
+            activeBlank.filled = activeBlank.correct;
+            quiz.active += 1;
+            renderQuiz();
+          }, 120);
+        });
+      });
+    }
+
+    function scheduleEndingTransition() {
+      if (!quiz || quiz.didScheduleEnding) return;
+      quiz.didScheduleEnding = true;
+      setTimeout(() => { navigateTo("screen-ending"); }, 2500);
+    }
+
+    function generateChoices(correct) {
+      const unique = new Set();
+      unique.add(correct);
+
+      const classify = (w) => {
+        if (/^\d{1,2}:\d{1,2}(-\d{1,2})?$/.test(w)) return "numRef";
+        if (/(복음|전서|후서|서|시편|잠언|고린도|요한|로마|갈라디아|에베소|빌립보|골로새서)/.test(w)) return "book";
+        return /^[가-힣]+$/.test(w) ? "korean" : "other";
+      };
+
+      const type = classify(correct);
+      const targetLen = correct.length;
+
+      const verseWords = Array.from(new Set(
+        (currentVerse.content.replace(/\n/g, " ").split(/\s+/).map(s => s.trim()).filter(Boolean))
+        .concat(currentVerse.reference.split(/\s+/).map(s => s.trim()).filter(Boolean))
+      ));
+
+      let pool =
+        type === "numRef"
+          ? ["1:1","1:9","3:5-6","5:11-12","10:13","16:24","10:9","11:4","4:7","2:8"]
+          : type === "book"
+            ? ["요한복음","요한일서","요한계시록","고린도전서","고린도후서","로마서","시편","잠언","에베소서","빌립보서","골로새서"]
+            : verseWords.filter(w => classify(w) === type && Math.abs(w.length - targetLen) <= 1);
+
+      if (pool.length < 6) pool = pool.concat(["영생","은혜","생명","믿음","구원","말씀","기쁨","확신","사랑","죄","자백","의로","인정","신뢰","지도"]);
+
+      pool = shuffle(pool.filter(w => w && w !== correct));
+      for (const w of pool) { if (unique.size >= 4) break; unique.add(w); }
+
+      const fallback = shuffle(["영생","은혜","생명","믿음","구원","말씀","기쁨","사랑","확신","인도","사죄","승리","기도","자백","의로"]);
+      for (const w of fallback) { if (unique.size >= 4) break; if (w !== correct) unique.add(w); }
+
+      let arr = shuffle(Array.from(unique).slice(0, 4));
+      if (!arr.includes(correct)) arr[0] = correct;
+      return shuffle(arr);
+    }
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    
+    function formatTopicHTML(topic) {
+      // 주제명 변경 금지: 텍스트는 그대로 두고, '암송 주제 선택하기' 목록에서만 표시를 2줄로 나눔(02,03만)
+      if (topic === "하나님의 말씀에 의한 생활") {
+        return `${escapeHTML("하나님의 말씀에")}<br>${escapeHTML("의한 생활")}`;
+      }
+      if (topic === "하나님의 성령에 의한 생활") {
+        return `${escapeHTML("하나님의 성령에")}<br>${escapeHTML("의한 생활")}`;
+      }
+      return escapeHTML(topic);
+    }
+function formatTopicForList(topic) {
+      // v3.3.6: 주제명은 변경하지 않되, 특정 항목은 목록에서 보기 좋게 줄바꿈만 적용
+      if (topic === "하나님의 말씀에 의한 생활") return "하나님의 말씀에<br>의한 생활";
+      if (topic === "하나님의 성령에 의한 생활") return "하나님의 성령에<br>의한 생활";
+      return escapeHTML(topic);
+    }
+
+    function escapeHTML(str) {
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+    function escapeAttr(str) { return escapeHTML(str).replaceAll("\n"," "); }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initTopics();
+      initNavigation();
+      if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
+
+      restartGardenAnim();
+    });
+  </script>
+
+
+</body>
+</html>
